@@ -7,11 +7,9 @@ package cliente;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Date;
-import javax.swing.JOptionPane;
 
 /**
  *
@@ -25,46 +23,36 @@ public class Cliente {
           
     }
     
-    ArrayList ReceberDados() {
+    String Enviar(String mensagem) {
         
-        ArrayList dados = new ArrayList();
+        ObjectOutputStream saida;
+        ObjectInputStream entrada;
+        Socket conexao;
         
         try {
             
-            Socket cliente = new Socket(InetAddress.getLocalHost().getHostName(), porta);
-            ObjectInputStream entrada = new ObjectInputStream(cliente.getInputStream());
-            dados = (ArrayList) entrada.readObject();
-            entrada.close();
+            conexao = new Socket(InetAddress.getLocalHost().getHostName(), porta);
+            System.out.println("Conectado ao servidor...");
+ 
+            // ligando as conexoes de saida e de entrada
+            saida = new ObjectOutputStream(conexao.getOutputStream());
+            entrada = new ObjectInputStream(conexao.getInputStream());
+            saida.flush();
+ 
+            saida.writeObject(mensagem);
             
-          }
-          catch(IOException | ClassNotFoundException e) {
-            System.out.println("Erro servidor: " + e.getMessage());
-          }
+            mensagem = (String) entrada.readObject();
+            System.out.println("Servidor: " + mensagem);
+ 
+            saida.close();
+            entrada.close();
+            conexao.close();
+ 
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("erro: " + e.toString());
+        }
         
-        return dados;
-    }
-
-    public static void main(String[] args) {
-           
-        try {
-            
-            Socket cliente = new Socket(InetAddress.getLocalHost().getHostName(), 12345);
-            ObjectInputStream entrada = new ObjectInputStream(cliente.getInputStream());
-            
-            ArrayList <String> sintomas = new ArrayList();
-            sintomas = (ArrayList<String>) entrada.readObject();
-            
-            //Date data_atual = (Date)entrada.readObject();
-            JOptionPane.showMessageDialog(null,"Data recebida do servidor:" + sintomas.get(1));
-            entrada.close();
-            
-            System.out.println("Conexão encerrada");
-            
-          }
-          catch(Exception e) {
-            System.out.println("Erro servidor: " + e.getMessage());
-          }
-
+        return mensagem;
     }
     
 }
